@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tumana Nikuletee - Delivery & Shopping Partner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0d0d0d; color: #ffffff; font-family: system-ui, -apple-system, sans-serif; }
+    .bw-card { background-color: #1a1a1a; border: 1px solid #333333; }
+    .bw-input { background-color: #000000; border: 1px solid #444444; color: #ffffff; }
+    .bw-btn { background-color: #ffffff; color: #000000; font-weight: bold; }
+    .bw-btn:hover { background-color: #e6e6e6; }
+    .bw-badge { border: 1px solid #ffffff; }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+
+  <!-- Header & Contact Bar -->
+  <header class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center pb-6 border-b border-zinc-800 mb-8 gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight">TUMANA NIKULETEE</h1>
+      <p class="text-sm text-zinc-400">TUNAKULETEA, WEWE RELAX! | Nyeri Town & Outskirts</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="tel:0753524349" class="bw-card px-4 py-2 rounded text-xs font-semibold hover:border-white">Call Support: 0753524349</a>
+      <a href="https://wa.me/254753524349" target="_blank" class="bw-btn px-4 py-2 rounded text-xs">WhatsApp Support</a>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- CUSTOMER PANEL -->
+    <section class="bw-card p-6 rounded-xl">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold tracking-wide">NEW DELIVERY REQUEST</h2>
+        <span class="text-xs px-2 py-1 rounded bw-badge">CUSTOMER APP</span>
+      </div>
+
+      <form id="orderForm" onsubmit="calculateAndShowPayment(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">PICKUP LOCATION</label>
+          <input type="text" id="pickup" required placeholder="e.g. Nyeri Town, Stage" class="w-full p-3 rounded bw-input text-sm">
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">DROP-OFF LOCATION</label>
+          <input type="text" id="dropoff" required placeholder="e.g. Kiganjo, Nyeri" class="w-full p-3 rounded bw-input text-sm">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">EST. DISTANCE (KM)</label>
+            <input type="number" id="distance" step="0.1" min="0.1" required placeholder="e.g. 8.6" class="w-full p-3 rounded bw-input text-sm" oninput="liveCalculate()">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">EST. SHOPPING COST (KSH)</label>
+            <input type="number" id="shoppingCost" min="0" value="0" class="w-full p-3 rounded bw-input text-sm" oninput="liveCalculate()">
+          </div>
+        </div>
+
+        <!-- Fragile Toggle Surcharge -->
+        <div class="flex items-center justify-between p-3 bw-input rounded my-2">
+          <div>
+            <span class="text-sm font-semibold">Fragile Goods?</span>
+            <p class="text-xs text-zinc-400">Adds flat surcharge (+ KSh 50)</p>
+          </div>
+          <input type="checkbox" id="isFragile" class="w-5 h-5 accent-white cursor-pointer" onchange="liveCalculate()">
+        </div>
+
+        <!-- Price Breakdown Card -->
+        <div class="bg-zinc-950 p-4 rounded border border-zinc-800 space-y-1 text-xs">
+          <div class="flex justify-between"><span class="text-zinc-400">Delivery Fee (50 KSh/KM):</span> <span id="deliveryFeeText">KSh 0</span></div>
+          <div class="flex justify-between"><span class="text-zinc-400">Fragile Goods Charge:</span> <span id="fragileFeeText">KSh 0</span></div>
+          <div class="flex justify-between"><span class="text-zinc-400">Shopping Cost Estimate:</span> <span id="shoppingFeeText">KSh 0</span></div>
+          <div class="flex justify-between pt-2 border-t border-zinc-800 text-sm font-bold"><span>Total Required Amount:</span> <span id="totalFeeText" class="text-white">KSh 0</span></div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bw-btn rounded text-sm uppercase tracking-wider">Proceed to Pre-Dispatch Payment</button>
+      </form>
+
+      <!-- Pre-dispatch M-Pesa Modal Instructions -->
+      <div id="paymentBox" class="hidden mt-6 p-4 bg-zinc-900 border border-white rounded space-y-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider">M-Pesa Payment Instructions</h3>
+        <p class="text-xs text-zinc-300">Send exactly <strong id="mpesaAmount" class="text-white">KSh 0</strong> to the target M-Pesa number before dispatch:</p>
+        <div class="p-3 bg-black rounded border border-zinc-700 flex justify-between items-center">
+          <span class="text-xs text-zinc-400">M-PESA RECIPIENT:</span>
+          <span class="font-mono text-sm font-bold text-white">0796006757</span>
+        </div>
+        <input type="text" id="mpesaRef" placeholder="Enter M-Pesa Transaction Code (e.g. QX12345678)" class="w-full p-2 rounded bw-input text-xs">
+        <button onclick="submitOrderToAdmin()" class="w-full py-2 bg-white text-black font-bold rounded text-xs uppercase">I Have Paid — Confirm Order</button>
+      </div>
+    </section>
+
+    <!-- ADMIN DASHBOARD PANEL -->
+    <section class="bw-card p-6 rounded-xl">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold tracking-wide">DISPATCH CONTROL</h2>
+        <span class="text-xs px-2 py-1 rounded bw-badge">ADMIN DASHBOARD</span>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-xs font-semibold text-zinc-400 uppercase">Incoming Dispatch Queue</h3>
+        <div id="adminQueue" class="space-y-3">
+          <p class="text-xs text-zinc-500 italic text-center py-8">No pending delivery requests in dispatch queue.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let currentCalculatedTotal = 0;
+    let ordersList = [];
+
+    function liveCalculate() {
+      const distance = parseFloat(document.getElementById('distance').value) || 0;
+      const shoppingCost = parseFloat(document.getElementById('shoppingCost').value) || 0;
+      const isFragile = document.getElementById('isFragile').checked;
+
+      const deliveryFee = distance * 50;
+      const fragileFee = isFragile ? 50 : 0;
+      currentCalculatedTotal = deliveryFee + fragileFee + shoppingCost;
+
+      document.getElementById('deliveryFeeText').innerText = `KSh ${deliveryFee.toFixed(0)}`;
+      document.getElementById('fragileFeeText').innerText = `KSh ${fragileFee}`;
+      document.getElementById('shoppingFeeText').innerText = `KSh ${shoppingCost.toFixed(0)}`;
+      document.getElementById('totalFeeText').innerText = `KSh ${currentCalculatedTotal.toFixed(0)}`;
+    }
+
+    function calculateAndShowPayment(e) {
+      e.preventDefault();
+      liveCalculate();
+      document.getElementById('mpesaAmount').innerText = `KSh ${currentCalculatedTotal.toFixed(0)}`;
+      document.getElementById('paymentBox').classList.remove('hidden');
+    }
+
+    function submitOrderToAdmin() {
+      const mpesaCode = document.getElementById('mpesaRef').value.trim();
+      if (!mpesaCode) {
+        alert("Please input your M-Pesa Transaction Code.");
+        return;
+      }
+
+      const order = {
+        id: "TN-" + Math.floor(100000 + Math.random() * 900000),
+        pickup: document.getElementById('pickup').value,
+        dropoff: document.getElementById('dropoff').value,
+        distance: document.getElementById('distance').value,
+        total: currentCalculatedTotal,
+        mpesaCode: mpesaCode,
+        status: "Pending Verification",
+        fragile: document.getElementById('isFragile').checked
+      };
+
+      ordersList.unshift(order);
+      renderAdminQueue();
+      alert("Order submitted successfully! Awaiting Admin payment verification & dispatch.");
+      document.getElementById('orderForm').reset();
+      document.getElementById('paymentBox').classList.add('hidden');
+      liveCalculate();
+    }
+
+    function renderAdminQueue() {
+      const queueContainer = document.getElementById('adminQueue');
+      if (ordersList.length === 0) {
+        queueContainer.innerHTML = `<p class="text-xs text-zinc-500 italic text-center py-8">No pending delivery requests in dispatch queue.</p>`;
+        return;
+      }
+
+      queueContainer.innerHTML = ordersList.map((order, index) => `
+        <div class="p-4 rounded border border-zinc-800 bg-black space-y-2">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-bold text-white">${order.id}</span>
+            <span class="px-2 py-0.5 text-[10px] rounded ${order.status === 'Dispatched' ? 'bg-white text-black font-bold' : 'border border-zinc-700 text-zinc-400'}">${order.status}</span>
+          </div>
+          <div class="text-xs text-zinc-300 space-y-0.5">
+            <p><strong>Route:</strong> ${order.pickup} &rarr; ${order.dropoff} (${order.distance} km)</p>
+            <p><strong>Total Paid:</strong> KSh ${order.total} | <strong>Fragile:</strong> ${order.fragile ? 'Yes (+50 KSh)' : 'No'}</p>
+            <p><strong>M-Pesa Ref (0796006757):</strong> <span class="font-mono text-white">${order.mpesaCode}</span></p>
+          </div>
+          <div class="flex gap-2 pt-2">
+            ${order.status === 'Pending Verification' ? 
+              `<button onclick="updateStatus(${index}, 'Dispatched')" class="bw-btn text-[10px] px-3 py-1 rounded">Approve & Dispatch</button>` : ''}
+            <a href="tel:0753524349" class="border border-zinc-700 text-[10px] px-3 py-1 rounded text-zinc-300">Call Support (0753524349)</a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateStatus(index, newStatus) {
+      ordersList[index].status = newStatus;
+      renderAdminQueue();
+    }
+  </script>
+</body>
+</html>
